@@ -150,6 +150,14 @@ brew install --cask TheBoredTeam/boring-notch/boring-notch --no-quarantine
 3. **Build and Run**:
     - Click the "Run" button or press `Cmd + R`. Watch the magic unfold!
 
+## Fork Maintenance Notes
+
+If you are working on this fork, see [docs/FORK_GUIDE.md](docs/FORK_GUIDE.md) for:
+
+- license and upstream attribution rules,
+- fork versioning policy (`-salmonc.N`),
+- release note conventions and packaging workflow.
+
 ## 🤝 Contributing
 
 We’re all about good vibes and awesome contributions! Read [CONTRIBUTING.md](CONTRIBUTING.md) to learn how you can join the fun!
@@ -187,5 +195,4 @@ For a full list of licenses and attributions, please see the [Third-Party Licens
 
 - **SwiftUI**: For making us look like coding wizards.
 - **You**: For being awesome and checking out **boring.notch**!
-
 

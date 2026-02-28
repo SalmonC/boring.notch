@@ -57,6 +57,57 @@ final class ShelfStateViewModel: ObservableObject {
         items.removeAll { $0.id == item.id }
     }
 
+    func clearAll() {
+        guard !items.isEmpty else { return }
+        for item in items {
+            item.cleanupStoredData()
+        }
+        items.removeAll()
+    }
+
+    func removeItemsMatchingDroppedProviders(_ providers: [NSItemProvider]) async {
+        guard !providers.isEmpty, !items.isEmpty else { return }
+
+        var droppedFilePaths: Set<String> = []
+        var droppedURLStrings: Set<String> = []
+        var droppedTextPayloads: Set<String> = []
+
+        for provider in providers {
+            if let fileURL = await provider.extractFileURL() {
+                droppedFilePaths.insert(fileURL.standardizedFileURL.path)
+                continue
+            }
+
+            if let url = await provider.extractURL() {
+                droppedURLStrings.insert(url.absoluteString)
+                continue
+            }
+
+            if let text = await provider.extractText() {
+                droppedTextPayloads.insert(text)
+            }
+        }
+
+        guard !droppedFilePaths.isEmpty || !droppedURLStrings.isEmpty || !droppedTextPayloads.isEmpty else { return }
+
+        let removableItems = items.filter { item in
+            switch item.kind {
+            case .file:
+                guard let fileURL = resolveFileURL(for: item) else { return false }
+                return droppedFilePaths.contains(fileURL.standardizedFileURL.path)
+            case .link(let url):
+                return droppedURLStrings.contains(url.absoluteString) || droppedTextPayloads.contains(url.absoluteString)
+            case .text(let text):
+                return droppedTextPayloads.contains(text)
+            }
+        }
+
+        guard !removableItems.isEmpty else { return }
+        for item in removableItems {
+            remove(item)
+        }
+    }
+
     func updateBookmark(for item: ShelfItem, bookmark: Data) {
         guard let idx = items.firstIndex(where: { $0.id == item.id }) else { return }
         if case .file = items[idx].kind {

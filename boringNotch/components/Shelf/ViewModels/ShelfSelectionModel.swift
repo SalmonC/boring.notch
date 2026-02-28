@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import AppKit
 
 private let _shelfTypeAnchor: Bool = {
     _ = String(describing: ShelfItem.self)
@@ -76,12 +77,61 @@ final class ShelfSelectionModel: ObservableObject {
     }
 
     @Published private(set) var isDragging: Bool = false
+    @Published private(set) var draggedItemIDs: Set<UUID> = []
+    private(set) var removeDropFrameInScreen: CGRect = .null
+    private var lastDragEndTime: Date?
 
     func beginDrag() {
         isDragging = true
+        lastDragEndTime = nil
+    }
+
+    func beginDrag(items: [ShelfItem]) {
+        isDragging = true
+        draggedItemIDs = Set(items.map(\.id))
+        lastDragEndTime = nil
     }
 
     func endDrag() {
         isDragging = false
+        lastDragEndTime = Date()
+    }
+
+    func draggedItems(in allItems: [ShelfItem]) -> [ShelfItem] {
+        allItems.filter { draggedItemIDs.contains($0.id) }
+    }
+
+    func recentDraggedItems(in allItems: [ShelfItem], within seconds: TimeInterval) -> [ShelfItem] {
+        guard let lastDragEndTime, Date().timeIntervalSince(lastDragEndTime) <= seconds else {
+            return []
+        }
+        return allItems.filter { draggedItemIDs.contains($0.id) }
+    }
+
+    func isDragRecentlyEnded(within seconds: TimeInterval) -> Bool {
+        guard let lastDragEndTime else { return false }
+        return Date().timeIntervalSince(lastDragEndTime) <= seconds
+    }
+
+    func remainingDragCooldown(within seconds: TimeInterval) -> TimeInterval? {
+        guard let lastDragEndTime else { return nil }
+        let elapsed = Date().timeIntervalSince(lastDragEndTime)
+        let remaining = seconds - elapsed
+        return remaining > 0 ? remaining : nil
+    }
+
+    func clearDragSnapshot() {
+        draggedItemIDs.removeAll()
+        lastDragEndTime = nil
+    }
+
+    func updateRemoveDropFrameInScreen(_ frame: CGRect) {
+        guard removeDropFrameInScreen != frame else { return }
+        removeDropFrameInScreen = frame
+    }
+
+    func isPointInRemoveDropArea(_ point: NSPoint) -> Bool {
+        guard !removeDropFrameInScreen.isNull else { return false }
+        return removeDropFrameInScreen.contains(point)
     }
 }

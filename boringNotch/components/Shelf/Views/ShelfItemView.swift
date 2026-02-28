@@ -11,6 +11,10 @@ import Defaults
 
 import QuickLook
 
+private extension NSPasteboard.PasteboardType {
+    static let shelfInternalItem = NSPasteboard.PasteboardType("theboringteam.boringnotch.shelf-item")
+}
+
 struct ShelfItemView: View {
     let item: ShelfItem
     @EnvironmentObject var vm: BoringViewModel
@@ -240,6 +244,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
 
             // Store items being dragged for auto-remove feature
             draggedItems = itemsToDrag
+            ShelfSelectionModel.shared.beginDrag(items: itemsToDrag)
 
             // Create dragging items for AppKit
             var draggingItems: [NSDraggingItem] = []
@@ -269,6 +274,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         
         private func createPasteboardItem(for item: ShelfItem) -> NSPasteboardItem? {
             let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setString(item.id.uuidString, forType: .shelfInternalItem)
 
             switch item.kind {
             case .file:
@@ -310,7 +316,7 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
             case .outsideApplication:
                 return [.copy, .move]
             case .withinApplication:
-                return [.copy, .move, .generic]
+                return [.copy, .move]
             @unknown default:
                 return [.copy]
             }
@@ -318,11 +324,35 @@ private struct DraggableClickHandler<Content: View>: NSViewRepresentable {
         
         func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
             ShelfSelectionModel.shared.beginDrag()
+            session.animatesToStartingPositionsOnCancelOrFail = true
+        }
+
+        func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {
+            // If pointer is over Remove area, suppress rollback animation so item disappears immediately.
+            let isOverRemove = ShelfSelectionModel.shared.isPointInRemoveDropArea(screenPoint)
+            session.animatesToStartingPositionsOnCancelOrFail = !isOverRemove
         }
         
         
         func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
             ShelfSelectionModel.shared.endDrag()
+
+            // Fallback path: only apply when drop is not accepted by destination.
+            if operation.isEmpty && ShelfSelectionModel.shared.isPointInRemoveDropArea(screenPoint) {
+                for item in draggedItems {
+                    ShelfStateViewModel.shared.remove(item)
+                }
+                ShelfSelectionModel.shared.clear()
+                ShelfSelectionModel.shared.clearDragSnapshot()
+                draggedItems.removeAll()
+
+                for url in draggedURLs {
+                    url.stopAccessingSecurityScopedResource()
+                    NSLog("🔐 Stopped security-scoped access after drag: \(url.path)")
+                }
+                draggedURLs.removeAll()
+                return
+            }
 
             // Stop accessing security-scoped resources after drag completes
             for url in draggedURLs {

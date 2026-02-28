@@ -247,14 +247,28 @@ struct ContentView: View {
                 return
             }
 
-            anyDropDebounceTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(500))
-                guard !Task.isCancelled else { return }
+                anyDropDebounceTask = Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard !Task.isCancelled else { return }
 
-                if vm.dropEvent {
-                    vm.dropEvent = false
-                    return
-                }
+                    if ShelfSelectionModel.shared.isDragging
+                    || vm.shelfRemoveTargeting {
+                        return
+                    }
+
+                    if let remaining = ShelfSelectionModel.shared.remainingDragCooldown(within: 1.5) {
+                        try? await Task.sleep(for: .seconds(remaining))
+                        guard !Task.isCancelled else { return }
+                    }
+
+                    if ShelfSelectionModel.shared.isDragging || vm.shelfRemoveTargeting {
+                        return
+                    }
+
+                    if vm.dropEvent {
+                        vm.dropEvent = false
+                        return
+                    }
 
                 vm.dropEvent = false
                 if !SharingStateManager.shared.preventNotchClose {
@@ -583,7 +597,11 @@ struct ContentView: View {
                         self.isHovering = false
                     }
                     
-                    if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose {
+                    if self.vm.notchState == .open
+                        && !self.vm.isBatteryPopoverActive
+                        && !SharingStateManager.shared.preventNotchClose
+                        && !ShelfSelectionModel.shared.isDragging
+                        && !self.vm.anyDropZoneTargeting {
                         self.vm.close()
                     }
                 }

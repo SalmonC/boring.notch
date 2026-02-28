@@ -21,6 +21,7 @@ class BoringViewModel: NSObject, ObservableObject {
     @Published var dragDetectorTargeting: Bool = false
     @Published var generalDropTargeting: Bool = false
     @Published var dropZoneTargeting: Bool = false
+    @Published var shelfRemoveTargeting: Bool = false
     @Published var dropEvent: Bool = false
     @Published var anyDropZoneTargeting: Bool = false
     var cancellables: Set<AnyCancellable> = []
@@ -58,9 +59,13 @@ class BoringViewModel: NSObject, ObservableObject {
         notchSize = getClosedNotchSize(screenUUID: screenUUID)
         closedNotchSize = notchSize
 
-        Publishers.CombineLatest3($dropZoneTargeting, $dragDetectorTargeting, $generalDropTargeting)
-            .map { shelf, drag, general in
-                shelf || drag || general
+        Publishers.CombineLatest(
+            Publishers.CombineLatest3($dropZoneTargeting, $dragDetectorTargeting, $generalDropTargeting),
+            $shelfRemoveTargeting
+        )
+            .map { targets, remove in
+                let (shelf, drag, general) = targets
+                return shelf || drag || general || remove
             }
             .assign(to: \.anyDropZoneTargeting, on: self)
             .store(in: &cancellables)
