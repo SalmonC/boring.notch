@@ -37,6 +37,12 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.16 (287) - 2026-02-28
+
+- Rebased fork changes onto `upstream/dev` for validation build.
+- Fixed `ShelfStateViewModel` compatibility on `dev` branch (`resolveFileURL` mismatch).
+- Built and packaged a dev-based test DMG for local installation.
+
 ### 2.7.3-salmonc.15 (286) - 2026-02-28
 
 - Shelf `Remove` drag/drop behavior stabilized.
@@ -64,7 +70,10 @@ xcodebuild -project boringNotch.xcodeproj -scheme boringNotch -configuration Rel
 Create DMG:
 
 ```bash
-./Configuration/dmg/create_dmg.sh build/Build/Products/Release/boringNotch.app /absolute/path/to/boringNotch.dmg boringNotch
+hdiutil create -volname "boringNotch" \
+  -srcfolder build/Build/Products/Release/boringNotch.app \
+  -ov -format UDZO \
+  /absolute/path/to/boringNotch.dmg
 ```
 
 Install to `/Applications`:

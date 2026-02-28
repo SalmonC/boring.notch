@@ -93,7 +93,7 @@ final class ShelfStateViewModel: ObservableObject {
         let removableItems = items.filter { item in
             switch item.kind {
             case .file:
-                guard let fileURL = resolveFileURL(for: item) else { return false }
+                guard let fileURL = item.fileURL else { return false }
                 return droppedFilePaths.contains(fileURL.standardizedFileURL.path)
             case .link(let url):
                 return droppedURLStrings.contains(url.absoluteString) || droppedTextPayloads.contains(url.absoluteString)
