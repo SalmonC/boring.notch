@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.17 (288) - 2026-03-02
+
+- Fixed clipped selection border in shelf items after adding `Clear` control.
+- Adjusted shelf list padding to keep full highlight stroke visible.
+
 ### 2.7.3-salmonc.16 (287) - 2026-02-28
 
 - Rebased fork changes onto `upstream/dev` for validation build.

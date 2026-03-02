@@ -199,7 +199,8 @@ struct ShelfView: View {
                             }
                         }
                     }
-                    .padding(-spacing)
+                    .padding(.horizontal, -spacing)
+                    .padding(.vertical, 2)
                     .scrollIndicators(.never)
                 }
             }
