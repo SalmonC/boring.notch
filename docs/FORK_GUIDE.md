@@ -37,6 +37,12 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.18 (289) - 2026-03-02
+
+- Moved shelf `Clear` to a floating overlay button (no layout slot in file list).
+- Removed temporary list-padding workaround and restored original shelf item layout flow.
+- Prevented `Clear` from affecting file card position and selection border rendering.
+
 ### 2.7.3-salmonc.17 (288) - 2026-03-02
 
 - Fixed clipped selection border in shelf items after adding `Clear` control.

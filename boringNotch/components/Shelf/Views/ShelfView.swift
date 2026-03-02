@@ -138,6 +138,13 @@ struct ShelfView: View {
                 content
                     .padding()
             }
+            .overlay(alignment: .topTrailing) {
+                if !tvm.isEmpty {
+                    clearButton
+                        .padding(.trailing, 14)
+                        .offset(y: -11)
+                }
+            }
             .transaction { transaction in
                 transaction.animation = vm.animation
             }
@@ -167,47 +174,43 @@ struct ShelfView: View {
                         .fontWeight(.medium)
                 }
             } else {
-                VStack(spacing: 10) {
-                    HStack {
-                        Spacer()
-                        Button(role: .destructive) {
-                            handleClearTap()
-                        } label: {
-                            Label(clearConfirmationArmed ? "Confirm?" : "Clear", systemImage: clearConfirmationArmed ? "exclamationmark.triangle.fill" : "trash")
-                                .font(.system(size: 12, weight: .semibold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule()
-                                        .fill(clearConfirmationArmed ? Color.orange.opacity(0.18) : Color.red.opacity(0.12))
-                                )
-                                .overlay(
-                                    Capsule()
-                                        .stroke(clearConfirmationArmed ? Color.orange.opacity(0.45) : Color.red.opacity(0.30), lineWidth: 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(clearConfirmationArmed ? Color.orange.opacity(0.98) : Color.red.opacity(0.95))
-                    }
-                    .padding(.horizontal, 2)
-
-                    ScrollView(.horizontal) {
-                        LazyHStack(spacing: spacing) {
-                            ForEach(tvm.items) { item in
-                                ShelfItemView(item: item)
-                                    .environmentObject(quickLookService)
-                            }
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: spacing) {
+                        ForEach(tvm.items) { item in
+                            ShelfItemView(item: item)
+                                .environmentObject(quickLookService)
                         }
                     }
-                    .padding(.horizontal, -spacing)
-                    .padding(.vertical, 2)
-                    .scrollIndicators(.never)
                 }
+                .padding(-spacing)
+                .scrollIndicators(.never)
             }
         }
         .onAppear {
             ShelfStateViewModel.shared.cleanupInvalidItems()
         }
+    }
+
+    private var clearButton: some View {
+        Button(role: .destructive) {
+            handleClearTap()
+        } label: {
+            Label(clearConfirmationArmed ? "Confirm?" : "Clear", systemImage: clearConfirmationArmed ? "exclamationmark.triangle.fill" : "trash")
+                .font(.system(size: 12, weight: .semibold))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(clearConfirmationArmed ? Color.orange.opacity(0.18) : Color.red.opacity(0.12))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(clearConfirmationArmed ? Color.orange.opacity(0.45) : Color.red.opacity(0.30), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(clearConfirmationArmed ? Color.orange.opacity(0.98) : Color.red.opacity(0.95))
+        .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 2)
     }
 }
 
