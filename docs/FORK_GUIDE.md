@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.19 (290) - 2026-03-04
+
+- Adjusted floating `Clear` button position to sit above shelf content area.
+- Avoided overlap between `Clear` and shelf file cards/text.
+
 ### 2.7.3-salmonc.18 (289) - 2026-03-02
 
 - Moved shelf `Clear` to a floating overlay button (no layout slot in file list).

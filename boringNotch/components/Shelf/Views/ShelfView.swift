@@ -141,8 +141,8 @@ struct ShelfView: View {
             .overlay(alignment: .topTrailing) {
                 if !tvm.isEmpty {
                     clearButton
-                        .padding(.trailing, 14)
-                        .offset(y: -11)
+                        .padding(.trailing, 12)
+                        .offset(y: -24)
                 }
             }
             .transaction { transaction in
