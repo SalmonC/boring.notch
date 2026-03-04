@@ -37,6 +37,12 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.20 (291) - 2026-03-04
+
+- Moved floating `Clear` back inside shelf panel top-right corner.
+- Bound shelf drop handling directly to panel surface to match visible shelf hit area.
+- Updated remove-zone label to localized "Remove from Shelf" / "从暂存区移除".
+
 ### 2.7.3-salmonc.19 (290) - 2026-03-04
 
 - Adjusted floating `Clear` button position to sit above shelf content area.

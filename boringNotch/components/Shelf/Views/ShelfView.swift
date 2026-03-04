@@ -28,9 +28,6 @@ struct ShelfView: View {
                 .aspectRatio(1, contentMode: .fit)
                 .environmentObject(vm)
             panel
-                .onDrop(of: [.item, .fileURL, .url, .utf8PlainText, .plainText, .text, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
-                    handleDrop(providers: providers)
-                }
             ShelfDeleteDropView(isTargeted: $vm.shelfRemoveTargeting) { providers in
                 handleDeleteDrop(providers: providers)
             }
@@ -127,35 +124,39 @@ struct ShelfView: View {
     }
 
     var panel: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .stroke(
-                vm.dragDetectorTargeting
-                    ? Color.accentColor.opacity(0.9)
-                    : Color.white.opacity(0.1),
-                style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
-            )
-            .overlay {
-                content
-                    .padding()
-            }
-            .overlay(alignment: .topTrailing) {
-                if !tvm.isEmpty {
-                    clearButton
-                        .padding(.trailing, 12)
-                        .offset(y: -24)
+        ZStack(alignment: .topTrailing) {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                    vm.dragDetectorTargeting
+                        ? Color.accentColor.opacity(0.9)
+                        : Color.white.opacity(0.1),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
+                )
+                .overlay {
+                    content
+                        .padding()
                 }
+                .transaction { transaction in
+                    transaction.animation = vm.animation
+                }
+                .contentShape(Rectangle())
+                .onDrop(of: [.item, .fileURL, .url, .utf8PlainText, .plainText, .text, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
+                    handleDrop(providers: providers)
+                }
+                .onTapGesture {
+                    selection.clear()
+                    clearConfirmationArmed = false
+                    clearConfirmationTask?.cancel()
+                    clearConfirmationTask = nil
+                    vm.shelfRemoveTargeting = false
+                }
+
+            if !tvm.isEmpty {
+                clearButton
+                    .padding(.top, 8)
+                    .padding(.trailing, 12)
             }
-            .transaction { transaction in
-                transaction.animation = vm.animation
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                selection.clear()
-                clearConfirmationArmed = false
-                clearConfirmationTask?.cancel()
-                clearConfirmationTask = nil
-                vm.shelfRemoveTargeting = false
-            }
+        }
     }
 
     var content: some View {
@@ -244,7 +245,7 @@ private struct ShelfDeleteDropView: View {
                             .foregroundStyle(isTargeted ? Color.red : Color.gray)
                     }
 
-                Text(isTargeted ? "Drop to remove from Shelf" : "Remove")
+                Text(isTargeted ? localizedDropHint : localizedRemoveLabel)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -267,6 +268,34 @@ private struct ShelfDeleteDropView: View {
                     isTargeted = false
                 }
             }
+        }
+    }
+
+    private var localizedRemoveLabel: String {
+        let lang = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        switch lang {
+        case let l where l.hasPrefix("zh"):
+            return "从暂存区移除"
+        case let l where l.hasPrefix("de"):
+            return "Aus Ablage entfernen"
+        case let l where l.hasPrefix("ko"):
+            return "보관함에서 제거"
+        default:
+            return "Remove from Shelf"
+        }
+    }
+
+    private var localizedDropHint: String {
+        let lang = Locale.preferredLanguages.first?.lowercased() ?? "en"
+        switch lang {
+        case let l where l.hasPrefix("zh"):
+            return "松手即可移除"
+        case let l where l.hasPrefix("de"):
+            return "Loslassen zum Entfernen"
+        case let l where l.hasPrefix("ko"):
+            return "놓으면 제거됩니다"
+        default:
+            return "Drop to remove from Shelf"
         }
     }
 }
