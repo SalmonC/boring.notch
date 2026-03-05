@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.21 (292) - 2026-03-05
+
+- Fixed shelf drop hit-test regression by binding drop handling to full panel container.
+- Removed drop targeting from the stroked shape layer to avoid partial-area activation.
+
 ### 2.7.3-salmonc.20 (291) - 2026-03-04
 
 - Moved floating `Clear` back inside shelf panel top-right corner.

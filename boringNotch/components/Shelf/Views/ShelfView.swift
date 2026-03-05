@@ -139,10 +139,6 @@ struct ShelfView: View {
                 .transaction { transaction in
                     transaction.animation = vm.animation
                 }
-                .contentShape(Rectangle())
-                .onDrop(of: [.item, .fileURL, .url, .utf8PlainText, .plainText, .text, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
-                    handleDrop(providers: providers)
-                }
                 .onTapGesture {
                     selection.clear()
                     clearConfirmationArmed = false
@@ -156,6 +152,10 @@ struct ShelfView: View {
                     .padding(.top, 8)
                     .padding(.trailing, 12)
             }
+        }
+        .contentShape(Rectangle())
+        .onDrop(of: [.item, .fileURL, .url, .utf8PlainText, .plainText, .text, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
+            handleDrop(providers: providers)
         }
     }
 
