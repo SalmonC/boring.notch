@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.25 (296) - 2026-03-05
+
+- Scoped `GeneralDropTargetDelegate` to closed-notch state only.
+- Prevented top-level `.cancel` drop delegate from interfering with open shelf panel drops.
+
 ### 2.7.3-salmonc.24 (295) - 2026-03-05
 
 - Anchored shelf drop receiver directly to panel stroke overlay bounds.
