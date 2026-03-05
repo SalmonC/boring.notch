@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.27 (298) - 2026-03-05
+
+- Stabilized shelf non-empty drop hit area by forcing list `ScrollView` to fill panel width.
+- Prevented post-layout shrink that could leave only left-side drop activation.
+
 ### 2.7.3-salmonc.26 (297) - 2026-03-05
 
 - Reverted shelf add-drop path to upstream-style SwiftUI `onDrop` chain.
