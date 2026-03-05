@@ -37,6 +37,12 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.22 (293) - 2026-03-05
+
+- Replaced shelf SwiftUI drop binding with full-panel AppKit drop receiver (`ShelfPanelDropReceiver`).
+- Fixed shelf drop hit-testing so left/middle/right panel areas all trigger consistently.
+- Prevented internal shelf drags from being treated as shelf-add drops.
+
 ### 2.7.3-salmonc.21 (292) - 2026-03-05
 
 - Fixed shelf drop hit-test regression by binding drop handling to full panel container.
