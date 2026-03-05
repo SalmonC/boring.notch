@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.23 (294) - 2026-03-05
+
+- Forced shelf panel drop receiver to match full panel size via `GeometryReader`.
+- Addressed potential left-only activation caused by drop receiver sizing mismatch.
+
 ### 2.7.3-salmonc.22 (293) - 2026-03-05
 
 - Replaced shelf SwiftUI drop binding with full-panel AppKit drop receiver (`ShelfPanelDropReceiver`).

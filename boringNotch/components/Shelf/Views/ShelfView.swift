@@ -147,10 +147,12 @@ struct ShelfView: View {
                     vm.shelfRemoveTargeting = false
                 }
 
-            ShelfPanelDropReceiver(isTargeted: $vm.dragDetectorTargeting) { providers in
-                handleDrop(providers: providers)
+            GeometryReader { proxy in
+                ShelfPanelDropReceiver(isTargeted: $vm.dragDetectorTargeting) { providers in
+                    handleDrop(providers: providers)
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             if !tvm.isEmpty {
                 clearButton
