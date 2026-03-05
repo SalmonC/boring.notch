@@ -37,6 +37,12 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.26 (297) - 2026-03-05
+
+- Reverted shelf add-drop path to upstream-style SwiftUI `onDrop` chain.
+- Removed custom full-panel drop receiver (`ShelfPanelDropReceiver`) to reduce invasive drag interception.
+- Kept Clear/Remove features and switched Remove label/hint to `Localizable.xcstrings` keys.
+
 ### 2.7.3-salmonc.25 (296) - 2026-03-05
 
 - Scoped `GeneralDropTargetDelegate` to closed-notch state only.

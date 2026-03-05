@@ -28,6 +28,9 @@ struct ShelfView: View {
                 .aspectRatio(1, contentMode: .fit)
                 .environmentObject(vm)
             panel
+                .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
+                    handleDrop(providers: providers)
+                }
             ShelfDeleteDropView(isTargeted: $vm.shelfRemoveTargeting) { providers in
                 handleDeleteDrop(providers: providers)
             }
@@ -136,14 +139,10 @@ struct ShelfView: View {
                     content
                         .padding()
                 }
-                .overlay {
-                    ShelfPanelDropReceiver(isTargeted: $vm.dragDetectorTargeting) { providers in
-                        handleDrop(providers: providers)
-                    }
-                }
                 .transaction { transaction in
                     transaction.animation = vm.animation
                 }
+                .contentShape(Rectangle())
                 .onTapGesture {
                     selection.clear()
                     clearConfirmationArmed = false
@@ -186,6 +185,9 @@ struct ShelfView: View {
                 }
                 .padding(-spacing)
                 .scrollIndicators(.never)
+                .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], isTargeted: $vm.dragDetectorTargeting) { providers in
+                    handleDrop(providers: providers)
+                }
             }
         }
         .onAppear {
@@ -213,133 +215,6 @@ struct ShelfView: View {
         .buttonStyle(.plain)
         .foregroundStyle(clearConfirmationArmed ? Color.orange.opacity(0.98) : Color.red.opacity(0.95))
         .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 2)
-    }
-}
-
-private struct ShelfPanelDropReceiver: NSViewRepresentable {
-    @Binding var isTargeted: Bool
-    let onDrop: ([NSItemProvider]) -> Bool
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(isTargeted: $isTargeted, onDrop: onDrop)
-    }
-
-    func makeNSView(context: Context) -> ReceiverView {
-        let view = ReceiverView()
-        view.coordinator = context.coordinator
-        return view
-    }
-
-    func updateNSView(_ nsView: ReceiverView, context: Context) {
-        context.coordinator.isTargeted = $isTargeted
-        context.coordinator.onDrop = onDrop
-        nsView.coordinator = context.coordinator
-    }
-
-    final class Coordinator {
-        var isTargeted: Binding<Bool>
-        var onDrop: ([NSItemProvider]) -> Bool
-
-        init(isTargeted: Binding<Bool>, onDrop: @escaping ([NSItemProvider]) -> Bool) {
-            self.isTargeted = isTargeted
-            self.onDrop = onDrop
-        }
-    }
-
-    final class ReceiverView: NSView {
-        var coordinator: Coordinator?
-
-        override init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            registerForDraggedTypes([
-                shelfInternalPasteboardType,
-                .fileURL,
-                .URL,
-                .string,
-                NSPasteboard.PasteboardType(UTType.item.identifier),
-                NSPasteboard.PasteboardType(UTType.text.identifier),
-                NSPasteboard.PasteboardType(UTType.utf8PlainText.identifier),
-                NSPasteboard.PasteboardType(UTType.plainText.identifier),
-                NSPasteboard.PasteboardType(UTType.data.identifier),
-                NSPasteboard.PasteboardType(UTType.image.identifier),
-            ])
-        }
-
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-
-        override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-            guard !containsInternalShelfDrag(sender) else {
-                coordinator?.isTargeted.wrappedValue = false
-                return []
-            }
-            coordinator?.isTargeted.wrappedValue = true
-            return .copy
-        }
-
-        override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
-            guard !containsInternalShelfDrag(sender) else {
-                coordinator?.isTargeted.wrappedValue = false
-                return []
-            }
-            coordinator?.isTargeted.wrappedValue = true
-            return .copy
-        }
-
-        override func draggingExited(_ sender: NSDraggingInfo?) {
-            coordinator?.isTargeted.wrappedValue = false
-        }
-
-        override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
-            !containsInternalShelfDrag(sender)
-        }
-
-        override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-            coordinator?.isTargeted.wrappedValue = false
-            guard !containsInternalShelfDrag(sender) else { return false }
-            let providers = Self.makeItemProviders(from: sender.draggingPasteboard)
-            return coordinator?.onDrop(providers) ?? false
-        }
-
-        override func concludeDragOperation(_ sender: NSDraggingInfo?) {
-            coordinator?.isTargeted.wrappedValue = false
-        }
-
-        private func containsInternalShelfDrag(_ sender: NSDraggingInfo) -> Bool {
-            sender.draggingPasteboard.availableType(from: [shelfInternalPasteboardType]) != nil
-        }
-
-        private static func makeItemProviders(from pasteboard: NSPasteboard) -> [NSItemProvider] {
-            guard let items = pasteboard.pasteboardItems else { return [] }
-
-            return items.compactMap { pasteboardItem in
-                let provider = NSItemProvider()
-                var hasRepresentation = false
-
-                for type in pasteboardItem.types {
-                    if let data = pasteboardItem.data(forType: type) {
-                        hasRepresentation = true
-                        provider.registerDataRepresentation(forTypeIdentifier: type.rawValue, visibility: .all) { completion in
-                            completion(data, nil)
-                            return nil
-                        }
-                        continue
-                    }
-
-                    if let string = pasteboardItem.string(forType: type) {
-                        hasRepresentation = true
-                        let data = Data(string.utf8)
-                        provider.registerDataRepresentation(forTypeIdentifier: type.rawValue, visibility: .all) { completion in
-                            completion(data, nil)
-                            return nil
-                        }
-                    }
-                }
-
-                return hasRepresentation ? provider : nil
-            }
-        }
     }
 }
 
@@ -373,7 +248,7 @@ private struct ShelfDeleteDropView: View {
                             .foregroundStyle(isTargeted ? Color.red : Color.gray)
                     }
 
-                Text(isTargeted ? localizedDropHint : localizedRemoveLabel)
+                Text(isTargeted ? "Drop to remove from shelf" : "Remove from shelf")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -399,33 +274,6 @@ private struct ShelfDeleteDropView: View {
         }
     }
 
-    private var localizedRemoveLabel: String {
-        let lang = Locale.preferredLanguages.first?.lowercased() ?? "en"
-        switch lang {
-        case let l where l.hasPrefix("zh"):
-            return "从暂存区移除"
-        case let l where l.hasPrefix("de"):
-            return "Aus Ablage entfernen"
-        case let l where l.hasPrefix("ko"):
-            return "보관함에서 제거"
-        default:
-            return "Remove from Shelf"
-        }
-    }
-
-    private var localizedDropHint: String {
-        let lang = Locale.preferredLanguages.first?.lowercased() ?? "en"
-        switch lang {
-        case let l where l.hasPrefix("zh"):
-            return "松手即可移除"
-        case let l where l.hasPrefix("de"):
-            return "Loslassen zum Entfernen"
-        case let l where l.hasPrefix("ko"):
-            return "놓으면 제거됩니다"
-        default:
-            return "Drop to remove from Shelf"
-        }
-    }
 }
 
 private struct ShelfDeleteDropReceiver: NSViewRepresentable {
