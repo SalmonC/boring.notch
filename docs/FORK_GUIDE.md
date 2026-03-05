@@ -37,6 +37,11 @@ Recommended locations:
 
 ## 4. Fork Release Notes
 
+### 2.7.3-salmonc.24 (295) - 2026-03-05
+
+- Anchored shelf drop receiver directly to panel stroke overlay bounds.
+- Removed geometry-based receiver sizing path to avoid mismatched hit regions.
+
 ### 2.7.3-salmonc.23 (294) - 2026-03-05
 
 - Forced shelf panel drop receiver to match full panel size via `GeometryReader`.

@@ -136,6 +136,11 @@ struct ShelfView: View {
                     content
                         .padding()
                 }
+                .overlay {
+                    ShelfPanelDropReceiver(isTargeted: $vm.dragDetectorTargeting) { providers in
+                        handleDrop(providers: providers)
+                    }
+                }
                 .transaction { transaction in
                     transaction.animation = vm.animation
                 }
@@ -146,13 +151,6 @@ struct ShelfView: View {
                     clearConfirmationTask = nil
                     vm.shelfRemoveTargeting = false
                 }
-
-            GeometryReader { proxy in
-                ShelfPanelDropReceiver(isTargeted: $vm.dragDetectorTargeting) { providers in
-                    handleDrop(providers: providers)
-                }
-                .frame(width: proxy.size.width, height: proxy.size.height)
-            }
 
             if !tvm.isEmpty {
                 clearButton
