@@ -13,7 +13,10 @@ struct ShelfView: View {
     @StateObject var tvm = ShelfStateViewModel.shared
     @StateObject var selection = ShelfSelectionModel.shared
     @StateObject private var quickLookService = QuickLookService()
+    @State private var clearConfirmationArmed = false
+    @State private var clearConfirmationTask: Task<Void, Never>?
     private let spacing: CGFloat = 8
+    private let clearConfirmTimeout: Duration = .seconds(4)
 
     var body: some View {
         HStack(spacing: 12) {
@@ -28,6 +31,11 @@ struct ShelfView: View {
         // Bind Quick Look to shelf selection
         .onChange(of: selection.selectedIDs) {
             updateQuickLookSelection()
+        }
+        .onDisappear {
+            clearConfirmationTask?.cancel()
+            clearConfirmationTask = nil
+            clearConfirmationArmed = false
         }
         .quickLookPresenter(using: quickLookService)
     }
@@ -58,23 +66,96 @@ struct ShelfView: View {
         }
     }
 
+    private func handleClearTap() {
+        guard !tvm.isEmpty else { return }
+
+        if clearConfirmationArmed {
+            clearConfirmationTask?.cancel()
+            clearConfirmationTask = nil
+            clearConfirmationArmed = false
+            ShelfStateViewModel.shared.clearAll()
+            selection.clear()
+            return
+        }
+
+        clearConfirmationArmed = true
+        clearConfirmationTask?.cancel()
+        clearConfirmationTask = Task { @MainActor in
+            try? await Task.sleep(for: clearConfirmTimeout)
+            guard !Task.isCancelled else { return }
+            clearConfirmationArmed = false
+            clearConfirmationTask = nil
+        }
+    }
+
+    private var panelStrokeColor: Color {
+        vm.dragDetectorTargeting ? Color.accentColor.opacity(0.9) : Color.white.opacity(0.1)
+    }
+
+    private var clearButtonTitle: String {
+        clearConfirmationArmed ? "Confirm?" : String(localized: "Clear slot")
+    }
+
+    private var clearButtonIcon: String {
+        clearConfirmationArmed ? "exclamationmark.triangle.fill" : "trash"
+    }
+
+    private var clearButtonFill: Color {
+        clearConfirmationArmed ? Color.orange.opacity(0.18) : Color.red.opacity(0.12)
+    }
+
+    private var clearButtonStroke: Color {
+        clearConfirmationArmed ? Color.orange.opacity(0.45) : Color.red.opacity(0.30)
+    }
+
+    private var clearButtonForeground: Color {
+        clearConfirmationArmed ? Color.orange.opacity(0.98) : Color.red.opacity(0.95)
+    }
+
+    @ViewBuilder
+    private var clearButtonOverlay: some View {
+        if !tvm.isEmpty {
+            Button(role: .destructive) {
+                handleClearTap()
+            } label: {
+                Label(clearButtonTitle, systemImage: clearButtonIcon)
+                    .font(.system(size: 12, weight: .semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(clearButtonFill))
+                    .overlay(
+                        Capsule()
+                            .stroke(clearButtonStroke, lineWidth: 1)
+                    )
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(clearButtonForeground)
+            .padding(.top, 10)
+            .padding(.trailing, 12)
+            .allowsHitTesting(!vm.dragDetectorTargeting)
+        }
+    }
+
     var panel: some View {
         RoundedRectangle(cornerRadius: 16)
-            .stroke(
-                vm.dragDetectorTargeting
-                    ? Color.accentColor.opacity(0.9)
-                    : Color.white.opacity(0.1),
-                style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
-            )
+            .stroke(panelStrokeColor, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10]))
             .overlay {
                 content
                     .padding()
+            }
+            .overlay(alignment: .topTrailing) {
+                clearButtonOverlay
             }
             .transaction { transaction in
                 transaction.animation = vm.animation
             }
             .contentShape(Rectangle())
-            .onTapGesture { selection.clear() }
+            .onTapGesture {
+                selection.clear()
+                clearConfirmationArmed = false
+                clearConfirmationTask?.cancel()
+                clearConfirmationTask = nil
+            }
     }
 
     var content: some View {
